@@ -1,15 +1,14 @@
-<<<<<<< HEAD
-# custum_search_engine
-=======
 # Custom Search Engine
 
-## Descriere
+A simple search engine with web crawling, indexing, and search API.
 
-Un motor de căutare personalizat scris în Python. Include:
-- **Crawler:** colectează pagini web și extrage text.
-- **Indexer:** calculează scoruri TF-IDF și indexează documentele în Elasticsearch.
-- **API:** interfață RESTful cu Flask pentru interogări text.
+## Setup
+1. Clone the repo: `git clone <repo-url>`
+2. Create a virtual environment: `python -m venv venv`
+3. Install dependencies: `pip install -r requirements.txt`
+4. Copy `.env.example` to `.env` and configure variables.
+5. Run Elasticsearch locally or provide a valid host.
 
-## Structură
-
->>>>>>> 75e6d93 (Primul commit: adaugă docker-compose.yml pentru Elasticsearch și Kibana)
+## Running
+- Start crawler: `python crawler/crawler.py`
+- Start API: `python api/app.py`

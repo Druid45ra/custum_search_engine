@@ -1,48 +1,66 @@
 import requests
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin, urlparse
-from .utils import is_valid_url, get_robots_parser
-import logging
+from crawler.utils import is_valid_url, clean_url, is_same_domain, parse_html, can_crawl
+from config.settings import START_URL, CRAWL_LIMIT
+from queue import Queue
 
 
 class Crawler:
-    def __init__(self, start_url, max_depth=2):
+    def __init__(self, start_url=START_URL, crawl_limit=CRAWL_LIMIT):
         self.start_url = start_url
-        self.max_depth = max_depth
-        self.visited = set()
-        self.logger = logging.getLogger(__name__)
+        self.crawl_limit = crawl_limit
 
-    def crawl(self, url=None, depth=0):
-        if url is None:
-            url = self.start_url
-
-        if depth > self.max_depth:
-            return
-
-        if url in self.visited:
-            return
-
+    def crawl_page(self, url):
         if not is_valid_url(url):
-            return
-
-        self.visited.add(url)
-        self.logger.info(f"Crawling: {url}")
-
+            print(f"Invalid URL: {url}")
+            return None
         try:
-            resp = requests.get(url, timeout=5)
-            resp.raise_for_status()
-            soup = BeautifulSoup(resp.text, "html.parser")
-            text = soup.get_text()
+            response = requests.get(url, timeout=10)
+            response.raise_for_status()
+            title, text = parse_html(response.text)
+            return {"url": url, "title": title, "text": text}
+        except requests.RequestException as e:
+            print(f"Error crawling {url}: {e}")
+            return None
 
-            # TODO: Trimite textul la indexer aici
+    def crawl_recursive(self):
+        visited = set()
+        queue = Queue()
+        queue.put(self.start_url)
+        results = []
 
-            for link in soup.find_all("a", href=True):
-                next_url = urljoin(url, link["href"])
-                if self._same_domain(next_url):
-                    self.crawl(next_url, depth + 1)
+        while not queue.empty() and len(visited) < self.crawl_limit:
+            url = queue.get()
+            if url in visited or not can_crawl(url):
+                continue
+            visited.add(url)
 
-        except Exception as e:
-            self.logger.error(f"Failed to crawl {url}: {e}")
+            page_data = self.crawl_page(url)
+            if page_data:
+                results.append(page_data)
 
-    def _same_domain(self, url):
-        return urlparse(url).netloc == urlparse(self.start_url).netloc
+                try:
+                    response = requests.get(url, timeout=10)
+                    response.raise_for_status()
+                    soup = BeautifulSoup(response.text, "html.parser")
+                    for link in soup.find_all("a", href=True):
+                        href = clean_url(link["href"], url)
+                        if is_same_domain(href, self.start_url) and href not in visited:
+                            queue.put(href)
+                except requests.RequestException as e:
+                    print(f"Error fetching links from {url}: {e}")
+
+        return results
+
+
+def crawl_recursive(start_url=START_URL):
+    """Legacy function for compatibility."""
+    crawler = Crawler(start_url)
+    return crawler.crawl_recursive()
+
+
+if __name__ == "__main__":
+    crawler = Crawler()
+    pages = crawler.crawl_recursive()
+    for page in pages:
+        print(f"Crawled: {page['url']}, Title: {page['title']}")

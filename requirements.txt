@@ -1,17 +1,7 @@
-# Web scraping
-beautifulsoup4==4.12.3
 requests==2.31.0
-
-# Backend API
-Flask==3.0.2
-
-# Elasticsearch client
-elasticsearch==8.13.0
-
-# Utils
+beautifulsoup4==4.12.3
+elasticsearch==8.15.0
+flask==3.0.3
+nltk==3.9.1
 python-dotenv==1.0.1
-
-# Teste
-pytest==8.2.1
-
-scikit-learn==1.7.0
+pytest==8.3.2

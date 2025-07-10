@@ -1,8 +1,8 @@
-import os
 from dotenv import load_dotenv
+import os
 
 load_dotenv()
 
-START_URL = os.getenv("START_URL", "https://example.com")
-MAX_DEPTH = int(os.getenv("MAX_DEPTH", 2))
-ES_HOST = os.getenv("ES_HOST", "http://localhost:9200")
+ELASTICSEARCH_HOST = os.getenv("ELASTICSEARCH_HOST", "http://localhost:9200")
+START_URL = os.getenv("START_URL", "https://www.wikipedia.org")
+CRAWL_LIMIT = int(os.getenv("CRAWL_LIMIT", 10))
